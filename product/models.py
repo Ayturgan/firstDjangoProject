@@ -33,3 +33,21 @@ class CartItem(Model):
     product = ForeignKey(Product, on_delete=CASCADE)
     quantity = PositiveIntegerField(default=1)
 
+
+class ProductRating(Model):
+    user = ForeignKey(Customer, on_delete=CASCADE)
+    product = ForeignKey(Product, on_delete=CASCADE)
+    rating = PositiveIntegerField()
+
+    def __str__(self):
+        return f'Rating by {self.user.email} for {self.product.name}'
+
+
+class ProductReview(Model):
+    author = ForeignKey(Customer, on_delete=CASCADE)
+    product = ForeignKey(Product, on_delete=CASCADE)
+    text = TextField()
+    create_at = DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Review by {self.author.email} for {self.product.name}'

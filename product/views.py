@@ -4,8 +4,9 @@ from rest_framework import permissions, status
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializer import ProductSerializer, CartItemSerializer
-from .models import Product, Cart, CartItem
+from .serializer import ProductSerializer, CartItemSerializer, ProductReviewSerializer, ProductListReviewSerializer, \
+    ProductRatingSerializer, ProductListRatingSerializer, ProductListSerializer
+from .models import Product, Cart, CartItem, ProductReview, ProductRating
 from users.permissions import IsSellerPermission, IsOwnerOrReadOnly, IsOwnerOfCart
 
 
@@ -38,7 +39,7 @@ class ProductListAPIView(APIView):
 
     def get(self, request):
         products = Product.objects.all()
-        serializer = ProductSerializer(products, many=True)
+        serializer = ProductListSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -47,7 +48,7 @@ class ProductDetailAPIView(APIView):
 
     def get(self, request, id):
         product = get_object(id, Product)
-        serializer = ProductSerializer(product)
+        serializer = ProductListSerializer(product)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -98,3 +99,43 @@ class CartAddProductAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class CreateProductReviewAPIView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, id):
+        product = Product.objects.get(id=id)
+        serializer = ProductReviewSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(product=product)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ListProductReviewsAPIView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, id):
+        reviews = ProductReview.objects.filter(product_id=id)
+        serializer = ProductListReviewSerializer(reviews, many=True, context={'id': id})
+        return Response(serializer.data)
+
+
+class CreateProductRatingAPIView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, id):
+        product = Product.objects.get(id=id)
+        serializer = ProductRatingSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(product=product)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ListProductRatingsAPIView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, id):
+        ratings = ProductRating.objects.filter(product_id=id)
+        serializer = ProductListRatingSerializer(ratings, many=True, context={'id': id})
+        return Response(serializer.data)
